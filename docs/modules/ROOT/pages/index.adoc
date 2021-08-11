@@ -3,3 +3,15 @@
 openshift4-splunk-forwarder is a Commodore component to manage openshift4-splunk-forwarder.
 
 See the xref:references/parameters.adoc[parameters] reference for further details.
+
+== Setup
+
+Create selfsigned certificate
+
+
+[source,shell]
+----
+openssl req  -nodes -new -x509 -days 3650 -keyout server.key -out server.cert
+----
+
+Use `{INTANCE_NAME}.openshift-logging.svc` as common name

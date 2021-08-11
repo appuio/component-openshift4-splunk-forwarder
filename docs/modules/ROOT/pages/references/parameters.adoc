@@ -2,18 +2,57 @@
 
 The parent key for all of the following parameters is `openshift4_splunk_forwarder`.
 
+
 == `namespace`
 
 [horizontal]
 type:: string
-default:: `syn-openshift4-splunk-forwarder`
+default:: `openshift-logging`
 
 The namespace in which to deploy this component.
+
+
+== `fluentd`
+
+[horizontal]
+type:: dictionary
+default:: see `defaults.yml`
+
+Parameters for fluentd.
+
+
+== `splunk`
+
+[horizontal]
+type:: dictionary
+default:: see `defaults.yml`
+
+Parameters for splunk integration.
 
 
 == Example
 
 [source,yaml]
 ----
-namespace: example-namespace
+applications:
+  - openshift4-splunk-forwarder as splunk-forwarder-customer-a
+
+parameters:
+  splunk_forwarder_customer_a:
+    fluentd:
+      ssl:
+        enabled: true
+        cert: |-
+          -----BEGIN CERTIFICATE-----
+          ...
+          -----END CERTIFICATE-----
+        key: |-
+          -----BEGIN PRIVATE KEY-----
+          ...
+          -----END PRIVATE KEY-----
+
+    splunk:
+      token: 4a8a737d-5452-426c-a6f7-106dca4e813f
+      hostname: prd-3948237.splunk.com
+      protocol: https
 ----
