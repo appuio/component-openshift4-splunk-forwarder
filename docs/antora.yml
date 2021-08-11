@@ -1,0 +1,6 @@
+name: openshift4-splunk-forwarder
+title: openshift4-splunk-forwarder
+version: master
+start_page: ROOT:index.adoc
+nav:
+  - modules/ROOT/partials/nav.adoc

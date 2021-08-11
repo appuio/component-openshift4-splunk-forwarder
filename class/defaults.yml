@@ -1,0 +1,4 @@
+parameters:
+  openshift4_splunk_forwarder:
+    =_metadata: {}
+    namespace: syn-openshift4-splunk-forwarder

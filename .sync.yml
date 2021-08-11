@@ -1,0 +1,6 @@
+:global:
+  componentName: openshift4-splunk-forwarder
+
+docs/antora.yml:
+  name: openshift4-splunk-forwarder
+  title: Openshift4 Splunk Forwarder

@@ -1,0 +1,5 @@
+= openshift4-splunk-forwarder
+
+openshift4-splunk-forwarder is a Commodore component to manage openshift4-splunk-forwarder.
+
+See the xref:references/parameters.adoc[parameters] reference for further details.
