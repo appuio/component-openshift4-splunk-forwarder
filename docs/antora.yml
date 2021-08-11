@@ -1,5 +1,11 @@
+#
+# File managed by ModuleSync - Do Not Edit
+#
+# The name and title can be customized in `.sync.yml` with `'docs/antora.yml'.title`, `'docs/antora.yml'.name`
+#
+
 name: openshift4-splunk-forwarder
-title: openshift4-splunk-forwarder
+title: Openshift4 Splunk Forwarder
 version: master
 start_page: ROOT:index.adoc
 nav:

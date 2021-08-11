@@ -1,3 +1,9 @@
+#
+# File managed by ModuleSync - Do Not Edit
+#
+# Additional Makefiles can be added to `.sync.yml` in 'Makefile.includes'
+#
+
 MAKEFLAGS += --warn-undefined-variables
 SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
