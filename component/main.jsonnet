@@ -84,10 +84,10 @@ local secret = kube.Secret(app_name) {
     'hec-token': std.base64(params.splunk.token),
     'fluentd-ssl-passsphrase': std.base64(params.fluentd.ssl.passphrase),
   } + (if !params.fluentd.ssl.enabled then {} else {
-         'forwarder-tls.crt': std.base64(params.fluentd.ssl.cert),
-         'forwarder-tls.key': std.base64(params.fluentd.ssl.key),
-         'ca-bundle.crt': std.base64(params.fluentd.ssl.cert),
-       }),
+          'forwarder-tls.crt': std.base64(params.fluentd.ssl.cert),
+          'forwarder-tls.key': std.base64(params.fluentd.ssl.key),
+          'ca-bundle.crt': std.base64(params.fluentd.ssl.cert),
+        }),
 };
 
 local secret_splunk = kube.Secret(app_name + '-splunk') {
@@ -187,10 +187,10 @@ local statefulset = kube.StatefulSet(app_name) {
             { name: 'buffer', mountPath: '/var/log/fluentd' },
             { name: 'fluentd-config', readOnly: true, mountPath: '/etc/fluent/' },
           ] + (if !params.fluentd.ssl.enabled then [] else [
-                 { name: 'fluentd-certs', readOnly: true, mountPath: '/secret/fluentd' },
-               ]) + (if params.splunk.ca == '' then [] else [
-                       { name: 'splunk-certs', readOnly: true, mountPath: '/secret/splunk' },
-                     ]),
+                  { name: 'fluentd-certs', readOnly: true, mountPath: '/secret/fluentd' },
+                ]) + (if params.splunk.ca == '' then [] else [
+                        { name: 'splunk-certs', readOnly: true, mountPath: '/secret/splunk' },
+                      ]),
           livenessProbe: {
             tcpSocket: {
               port: 24224,
@@ -215,19 +215,19 @@ local statefulset = kube.StatefulSet(app_name) {
           { name: 'buffer', emptyDir: {} },
           { name: 'fluentd-config', configMap: { name: app_name, items: [ { key: 'td-agent.conf', path: 'fluent.conf' } ], defaultMode: 420, optional: true } },
         ] + (if !params.fluentd.ssl.enabled then [] else [
-               {
-                 name: 'fluentd-certs',
-                 secret: {
-                   secretName: app_name,
-                   items: [
-                     { key: 'forwarder-tls.crt', path: 'tls.crt' },
-                     { key: 'forwarder-tls.key', path: 'tls.key' },
-                   ],
-                 },
-               },
-             ]) + (if params.splunk.ca == '' then [] else [
-                     { name: 'splunk-certs', secret: { secretName: app_name + '-splunk', items: [ { key: 'splunk-ca.crt', path: 'splunk-ca.crt' } ] } },
-                   ]),
+                {
+                  name: 'fluentd-certs',
+                  secret: {
+                    secretName: app_name,
+                    items: [
+                      { key: 'forwarder-tls.crt', path: 'tls.crt' },
+                      { key: 'forwarder-tls.key', path: 'tls.key' },
+                    ],
+                  },
+                },
+              ]) + (if params.splunk.ca == '' then [] else [
+                      { name: 'splunk-certs', secret: { secretName: app_name + '-splunk', items: [ { key: 'splunk-ca.crt', path: 'splunk-ca.crt' } ] } },
+                    ]),
       },
     },
   },
