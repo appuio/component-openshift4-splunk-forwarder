@@ -132,6 +132,58 @@ local service_headless = service_spec() {
   },
 };
 
+local statefulset_volumemounts = {
+  volumeMounts: [
+    { name: 'buffer', mountPath: '/var/log/fluentd' },
+    { name: 'fluentd-config', readOnly: true, mountPath: '/etc/fluent/' },
+  ],
+} + com.makeMergeable({
+  [if params.fluentd.ssl.enabled then 'volumeMounts']: [
+    { name: 'fluentd-certs', readOnly: true, mountPath: '/secret/fluentd' },
+  ],
+}) + com.makeMergeable({
+  [if params.splunk.ca != '' then 'volumeMounts']: [
+    { name: 'splunk-certs', readOnly: true, mountPath: '/secret/splunk' },
+  ],
+});
+
+local statefulset_volumes = {
+  volumes: [
+    // TODO: if persistence disabled, see below
+    { name: 'buffer', emptyDir: {} },
+    { name: 'fluentd-config', configMap: { name: app_name, items: [ { key: 'td-agent.conf', path: 'fluent.conf' } ], defaultMode: 420, optional: true } },
+  ],
+  /*
+  spec:
+    {{- if .Values.forwarding.fluentd.persistence.enabled }}
+    volumeClaimTemplates:
+    - metadata:
+        name: buffer
+      spec:
+        accessModes:
+        - {{ .Values.forwarding.fluentd.persistence.accessMode | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.forwarding.fluentd.persistence.size }}
+        {{- if .Values.forwarding.fluentd.persistence.storageClass }}
+        {{- if (eq "-" .Values.forwarding.fluentd.persistence.storageClass) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: "{{ .Values.forwarding.fluentd.persistence.storageClass }}"
+        {{- end }}
+        {{- end }}
+    {{- end }}
+  */
+} + com.makeMergeable({
+  [if params.fluentd.ssl.enabled then 'volumes']: [
+    { name: 'fluentd-certs', secret: { secretName: app_name, items: [ { key: 'forwarder-tls.crt', path: 'tls.crt' }, { key: 'forwarder-tls.key', path: 'tls.key' } ] } },
+  ],
+}) + com.makeMergeable({
+  [if params.splunk.ca != '' then 'volumes']: [
+    { name: 'splunk-certs', secret: { secretName: app_name + '-splunk', items: [ { key: 'splunk-ca.crt', path: 'splunk-ca.crt' } ] } },
+  ],
+});
+
 local statefulset = kube.StatefulSet(app_name) {
   metadata+: {
     labels+: {
@@ -159,98 +211,54 @@ local statefulset = kube.StatefulSet(app_name) {
         nodeSelector: params.fluentd.nodeselector,
         affinity: params.fluentd.affinity,
         tolerations: params.fluentd.tolerations,
-        containers: [ {
-          name: app_name,
-          image: 'registry.redhat.io/openshift4/ose-logging-fluentd:v4.6',
-          // imagePullPolicy: 'Always',
-          resources: params.fluentd.resources,
-          ports: [
-            { name: 'forwarder-tcp', protocol: 'TCP', containerPort: 24224 },
-            { name: 'forwarder-udp', protocol: 'UDP', containerPort: 24224 },
-          ],
-          env: [
-            { name: 'NODE_NAME', valueFrom: { fieldRef: { apiVersion: 'v1', fieldPath: 'spec.nodeName' } } },
-            { name: 'SHARED_KEY', valueFrom: { secretKeyRef: { name: app_name, key: 'shared_key' } } },
-            { name: 'SPLUNK_TOKEN', valueFrom: { secretKeyRef: { name: app_name, key: 'hec-token' } } },
-            { name: 'FLUENTD_SSL_PASSPHRASE', valueFrom: { secretKeyRef: { name: app_name, key: 'fluentd-ssl-passsphrase' } } },
-            { name: 'LOG_LEVEL', valueFrom: { configMapKeyRef: { name: app_name, key: 'fluentd-loglevel' } } },
-            { name: 'SPLUNK_HOST', valueFrom: { configMapKeyRef: { name: app_name, key: 'splunk-hostname' } } },
-            { name: 'SPLUNK_SOURCETYPE', valueFrom: { configMapKeyRef: { name: app_name, key: 'splunk-sourcetype' } } },
-            { name: 'SPLUNK_SOURCE', valueFrom: { configMapKeyRef: { name: app_name, key: 'splunk-source' } } },
-            { name: 'SPLUNK_PORT', valueFrom: { configMapKeyRef: { name: app_name, key: 'splunk-port' } } },
-            { name: 'SPLUNK_PROTOCOL', valueFrom: { configMapKeyRef: { name: app_name, key: 'splunk-protocol' } } },
-            { name: 'SPLUNK_INSECURE', valueFrom: { configMapKeyRef: { name: app_name, key: 'splunk-insecure' } } },
-            { name: 'SPLUNK_INDEX', valueFrom: { configMapKeyRef: { name: app_name, key: 'splunk-index' } } },
-          ],
-          args: [ 'fluentd' ],
-          volumeMounts: [
-            { name: 'buffer', mountPath: '/var/log/fluentd' },
-            { name: 'fluentd-config', readOnly: true, mountPath: '/etc/fluent/' },
-          ],
-          livenessProbe: {
-            tcpSocket: {
-              port: 24224,
+        containers: [
+          {
+            name: app_name,
+            image: 'registry.redhat.io/openshift4/ose-logging-fluentd:v4.6',
+            // imagePullPolicy: 'Always',
+            resources: params.fluentd.resources,
+            ports: [
+              { name: 'forwarder-tcp', protocol: 'TCP', containerPort: 24224 },
+              { name: 'forwarder-udp', protocol: 'UDP', containerPort: 24224 },
+            ],
+            env: [
+              { name: 'NODE_NAME', valueFrom: { fieldRef: { apiVersion: 'v1', fieldPath: 'spec.nodeName' } } },
+              { name: 'SHARED_KEY', valueFrom: { secretKeyRef: { name: app_name, key: 'shared_key' } } },
+              { name: 'SPLUNK_TOKEN', valueFrom: { secretKeyRef: { name: app_name, key: 'hec-token' } } },
+              { name: 'FLUENTD_SSL_PASSPHRASE', valueFrom: { secretKeyRef: { name: app_name, key: 'fluentd-ssl-passsphrase' } } },
+              { name: 'LOG_LEVEL', valueFrom: { configMapKeyRef: { name: app_name, key: 'fluentd-loglevel' } } },
+              { name: 'SPLUNK_HOST', valueFrom: { configMapKeyRef: { name: app_name, key: 'splunk-hostname' } } },
+              { name: 'SPLUNK_SOURCETYPE', valueFrom: { configMapKeyRef: { name: app_name, key: 'splunk-sourcetype' } } },
+              { name: 'SPLUNK_SOURCE', valueFrom: { configMapKeyRef: { name: app_name, key: 'splunk-source' } } },
+              { name: 'SPLUNK_PORT', valueFrom: { configMapKeyRef: { name: app_name, key: 'splunk-port' } } },
+              { name: 'SPLUNK_PROTOCOL', valueFrom: { configMapKeyRef: { name: app_name, key: 'splunk-protocol' } } },
+              { name: 'SPLUNK_INSECURE', valueFrom: { configMapKeyRef: { name: app_name, key: 'splunk-insecure' } } },
+              { name: 'SPLUNK_INDEX', valueFrom: { configMapKeyRef: { name: app_name, key: 'splunk-index' } } },
+            ],
+            args: [ 'fluentd' ],
+            livenessProbe: {
+              tcpSocket: {
+                port: 24224,
+              },
+              periodSeconds: 5,
+              timeoutSeconds: 3,
+              initialDelaySeconds: 10,
             },
-            periodSeconds: 5,
-            timeoutSeconds: 3,
-            initialDelaySeconds: 10,
-          },
-          readinessProbe: {
-            tcpSocket: {
-              port: 24224,
+            readinessProbe: {
+              tcpSocket: {
+                port: 24224,
+              },
+              periodSeconds: 3,
+              timeoutSeconds: 2,
+              initialDelaySeconds: 2,
             },
-            periodSeconds: 3,
-            timeoutSeconds: 2,
-            initialDelaySeconds: 2,
-          },
-          terminationMessagePolicy: 'File',
-          terminationMessagePath: '/dev/termination-log',
-        } + com.makeMergeable({
-          [if params.fluentd.ssl.enabled then 'volumeMounts']: [
-            { name: 'fluentd-certs', readOnly: true, mountPath: '/secret/fluentd' },
-          ],
-        }) + com.makeMergeable({
-          [if params.splunk.ca != '' then 'volumeMounts']: [
-            { name: 'splunk-certs', readOnly: true, mountPath: '/secret/splunk' },
-          ],
-        }) ],
-        volumes: [
-          // TODO: if persistence disabled, see below
-          { name: 'buffer', emptyDir: {} },
-          { name: 'fluentd-config', configMap: { name: app_name, items: [ { key: 'td-agent.conf', path: 'fluent.conf' } ], defaultMode: 420, optional: true } },
+            terminationMessagePolicy: 'File',
+            terminationMessagePath: '/dev/termination-log',
+          } + com.makeMergeable(statefulset_volumemounts),
         ],
-      } + com.makeMergeable({
-        [if params.fluentd.ssl.enabled then 'volumes']: [
-          { name: 'fluentd-certs', secret: { secretName: app_name, items: [ { key: 'forwarder-tls.crt', path: 'tls.crt' }, { key: 'forwarder-tls.key', path: 'tls.key' } ] } },
-        ],
-      }) + com.makeMergeable({
-        [if params.splunk.ca != '' then 'volumes']: [
-          { name: 'splunk-certs', secret: { secretName: app_name + '-splunk', items: [ { key: 'splunk-ca.crt', path: 'splunk-ca.crt' } ] } },
-        ],
-      }),
+      } + com.makeMergeable(statefulset_volumes),
     },
   },
-  /*
-  spec:
-    {{- if .Values.forwarding.fluentd.persistence.enabled }}
-    volumeClaimTemplates:
-    - metadata:
-        name: buffer
-      spec:
-        accessModes:
-        - {{ .Values.forwarding.fluentd.persistence.accessMode | quote }}
-        resources:
-          requests:
-            storage: {{ .Values.forwarding.fluentd.persistence.size }}
-        {{- if .Values.forwarding.fluentd.persistence.storageClass }}
-        {{- if (eq "-" .Values.forwarding.fluentd.persistence.storageClass) }}
-        storageClassName: ""
-        {{- else }}
-        storageClassName: "{{ .Values.forwarding.fluentd.persistence.storageClass }}"
-        {{- end }}
-        {{- end }}
-    {{- end }}
-  */
 };
 
 
