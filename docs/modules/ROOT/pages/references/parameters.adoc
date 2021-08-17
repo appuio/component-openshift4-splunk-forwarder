@@ -3,31 +3,177 @@
 The parent key for all of the following parameters is `openshift4_splunk_forwarder`.
 
 
-== `namespace`
-
-[horizontal]
-type:: string
-default:: `openshift-logging`
-
-The namespace in which to deploy this component.
-
-
 == `fluentd`
 
 [horizontal]
 type:: dictionary
-default:: see `defaults.yml`
+default::
++
+[source,yaml]
+----
+fluentd:
+    loglevel: info
+    replicas: 2
+    sharedkey: splunkforwarding
+    ssl:
+      enabled: false
+      cert: ""
+      key: ""
+      passphrase: ""
+----
 
-Parameters for fluentd.
+Fluentd pod parameters.
+
+=== `loglevel`
+
+[horizontal]
+type:: string
+default:: "info"
+
+Log level of the splunk-forwarder pod (https://docs.fluentd.org/deployment/logging).
+
+=== `replicas`
+
+[horizontal]
+type:: integer
+default:: 2
+
+Number of replicas of the splunk-forwarder pod.
+
+=== `sharedkey`
+
+[horizontal]
+type:: string
+default:: "splunkforwarding"
+
+The shared key for authentication (see https://docs.fluentd.org/input/forward).
+
+=== `ssl.enabled`
+
+[horizontal]
+type:: boolean
+default:: false
+
+Enable fluentd ssl encryption.
+
+=== `ssl.cert`
+
+[horizontal]
+type:: string
+default:: ""
+
+String of ssl certificate.
+
+=== `ssl.key`
+
+[horizontal]
+type:: string
+default:: ""
+
+String of ssl private key.
+
+=== `ssl.passphrase`
+
+[horizontal]
+type:: string
+default:: ""
+
+Passphrase of ssl private key.
 
 
 == `splunk`
 
 [horizontal]
 type:: dictionary
-default:: see `defaults.yml`
+default::
++
+[source,yaml]
+----
+splunk:
+  token: 4a8a737d-5452-426c-a6f7-106dca4e813f
+  hostname: splunk.syn-splunk.svc
+  port: 8088
+  insecure: true
+  protocol: https
+  index: openshift
+  sourcetype: openshift
+  source: openshift
+  ca: ""
+----
 
 Parameters for splunk integration.
+
+=== `token`
+
+[horizontal]
+type:: string
+default:: "4a8a737d-5452-426c-a6f7-106dca4e813f"
+
+Splunk HEC token.
+
+=== `hostname`
+
+[horizontal]
+type:: string
+default:: "splunk.syn-splunk.svc"
+
+Hostname of Splunk server.
+
+=== `port`
+
+[horizontal]
+type:: integer
+default:: 8088
+
+Port of Splunk server.
+
+=== `insecure`
+
+[horizontal]
+type:: boolean
+default:: true
+
+If `insecure: true` certificates of Splunk server are not validated.
+
+=== `protocol`
+
+[horizontal]
+type:: string
+default:: "https"
+
+Protocol used to forward logs to Splunk server, either `http` or `https`.
+
+=== `index`
+
+[horizontal]
+type:: string
+default:: "openshift"
+
+See https://github.com/fluent/fluent-plugin-splunk/blob/master/README.hec.md.
+
+=== `sourcetype`
+
+[horizontal]
+type:: string
+default:: "openshift"
+
+See https://github.com/fluent/fluent-plugin-splunk/blob/master/README.hec.md.
+
+=== `source`
+
+[horizontal]
+type:: string
+default:: "openshift"
+
+See https://github.com/fluent/fluent-plugin-splunk/blob/master/README.hec.md.
+
+=== `ca`
+
+[horizontal]
+type:: string
+default:: ""
+
+Splunk servers CA certificate.
 
 
 == Example
