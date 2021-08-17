@@ -133,7 +133,7 @@ Port of Splunk server.
 type:: boolean
 default:: true
 
-If `insecure: true` certificates of Splunk server are not validated.
+If `insecure: true` certificates of Splunk server aren't validated.
 
 === `protocol`
 
