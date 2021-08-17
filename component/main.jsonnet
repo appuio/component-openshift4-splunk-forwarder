@@ -1,4 +1,5 @@
-// main template for nfs-subdir-external-provisioner
+// main template for openshift4-splunk-forwarder
+local com = import 'lib/commodore.libjsonnet';
 local kap = import 'lib/kapitan.libjsonnet';
 local kube = import 'lib/kube.libjsonnet';
 local inv = kap.inventory();
@@ -83,11 +84,10 @@ local secret = kube.Secret(app_name) {
     shared_key: std.base64(params.fluentd.sharedkey),
     'hec-token': std.base64(params.splunk.token),
     'fluentd-ssl-passsphrase': std.base64(params.fluentd.ssl.passphrase),
-  } + (if !params.fluentd.ssl.enabled then {} else {
-         'forwarder-tls.crt': std.base64(params.fluentd.ssl.cert),
-         'forwarder-tls.key': std.base64(params.fluentd.ssl.key),
-         'ca-bundle.crt': std.base64(params.fluentd.ssl.cert),
-       }),
+    [if params.fluentd.ssl.enabled then 'forwarder-tls.crt']: std.base64(params.fluentd.ssl.cert),
+    [if params.fluentd.ssl.enabled then 'forwarder-tls.key']: std.base64(params.fluentd.ssl.key),
+    [if params.fluentd.ssl.enabled then 'ca-bundle.crt']: std.base64(params.fluentd.ssl.cert),
+  },
 };
 
 local secret_splunk = kube.Secret(app_name + '-splunk') {
@@ -131,8 +131,6 @@ local service_headless = service_spec() {
     clusterIP: 'None',
   },
 };
-
-local config_sts_volumemount_certs = {};
 
 local statefulset = kube.StatefulSet(app_name) {
   metadata+: {
@@ -188,8 +186,6 @@ local statefulset = kube.StatefulSet(app_name) {
           volumeMounts: [
             { name: 'buffer', mountPath: '/var/log/fluentd' },
             { name: 'fluentd-config', readOnly: true, mountPath: '/etc/fluent/' },
-            [ if params.fluentd.ssl.enabled then { name: 'fluentd-certs', readOnly: true, mountPath: '/secret/fluentd' } ],
-            [ if params.splunk.ca != '' then { name: 'splunk-certs', readOnly: true, mountPath: '/secret/splunk' } ],
           ],
           livenessProbe: {
             tcpSocket: {
@@ -209,24 +205,29 @@ local statefulset = kube.StatefulSet(app_name) {
           },
           terminationMessagePolicy: 'File',
           terminationMessagePath: '/dev/termination-log',
-        } ],
+        } + com.makeMergeable({
+          [if params.fluentd.ssl.enabled then 'volumeMounts']: [
+            { name: 'fluentd-certs', readOnly: true, mountPath: '/secret/fluentd' },
+          ],
+        }) + com.makeMergeable({
+          [if params.splunk.ca != '' then 'volumeMounts']: [
+            { name: 'splunk-certs', readOnly: true, mountPath: '/secret/splunk' },
+          ],
+        }) ],
         volumes: [
           // TODO: if persistence disabled, see below
           { name: 'buffer', emptyDir: {} },
           { name: 'fluentd-config', configMap: { name: app_name, items: [ { key: 'td-agent.conf', path: 'fluent.conf' } ], defaultMode: 420, optional: true } },
-          [ if params.fluentd.ssl.enabled then {
-            name: 'fluentd-certs',
-            secret: {
-              secretName: app_name,
-              items: [
-                { key: 'forwarder-tls.crt', path: 'tls.crt' },
-                { key: 'forwarder-tls.key', path: 'tls.key' },
-              ],
-            },
-          } ],
-          [ if params.splunk.ca != '' then { name: 'splunk-certs', secret: { secretName: app_name + '-splunk', items: [ { key: 'splunk-ca.crt', path: 'splunk-ca.crt' } ] } } ],
         ],
-      },
+      } + com.makeMergeable({
+        [if params.fluentd.ssl.enabled then 'volumes']: [
+          { name: 'fluentd-certs', secret: { secretName: app_name, items: [ { key: 'forwarder-tls.crt', path: 'tls.crt' }, { key: 'forwarder-tls.key', path: 'tls.key' } ] } },
+        ],
+      }) + com.makeMergeable({
+        [if params.splunk.ca != '' then 'volumes']: [
+          { name: 'splunk-certs', secret: { secretName: app_name + '-splunk', items: [ { key: 'splunk-ca.crt', path: 'splunk-ca.crt' } ] } },
+        ],
+      }),
     },
   },
   /*
