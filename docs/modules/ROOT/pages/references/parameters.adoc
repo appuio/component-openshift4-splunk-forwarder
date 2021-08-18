@@ -70,7 +70,7 @@ vault kv put "${key}" sharedkey=$(pwgen -s 32 1)
 type:: boolean
 default:: false
 
-Enable fluentd ssl encryption.
+Enable fluentd SSL encryption.
 
 === `ssl.cert`
 
@@ -88,7 +88,7 @@ See xref:how-tos/create-fluentd-cert.adoc[Create Fluentd Cert] to generate the F
 type:: string
 default:: Vault reference
 
-The SSL private key as a string.
+A Vault reference to the SSL private key.
 
 See xref:how-tos/create-fluentd-cert.adoc[Create Fluentd Cert] to generate the Fluentd certificate.
 
@@ -113,7 +113,7 @@ splunk:
   ca: ""
 ----
 
-Parameters for splunk integration.
+Parameters for Splunk integration.
 
 === `token`
 
@@ -147,7 +147,7 @@ Port of Splunk server.
 type:: boolean
 default:: true
 
-If `insecure: true` certificates of Splunk server aren't validated.
+If this value is set to `true` the certificates of Splunk server aren't validated.
 
 === `protocol`
 
@@ -187,7 +187,8 @@ See https://docs.splunk.com/Splexicon:Source.
 type:: string
 default:: ""
 
-Splunk servers CA certificate.
+The CA certificate for the Splunk server.
+Only required if the Splunk server is secured with a certificate which is signed by a CA that's not trusted by default.
 
 
 == Example
