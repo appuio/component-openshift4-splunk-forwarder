@@ -99,13 +99,16 @@ local secret_splunk = kube.Secret(app_name + '-splunk') {
   },
 };
 
-local service_spec() = kube.Service(app_name) {
+local service_headless = kube.Service(app_name) {
   metadata+: {
     labels+: {
       'app.kubernetes.io/component': 'fluentd',
+      name: app_name + '-headless',
     },
+    name: app_name + '-headless',
   },
   spec: {
+    clusterIP: 'None',
     ports: [ {
       name: '24224-tcp',
       protocol: 'TCP',
@@ -115,18 +118,6 @@ local service_spec() = kube.Service(app_name) {
     selector: app_selector,
     type: 'ClusterIP',
     sessionAffinity: 'None',
-  },
-};
-local service = service_spec();
-local service_headless = service_spec() {
-  metadata+: {
-    labels+: {
-      name: app_name + '-headless',
-    },
-    name: app_name + '-headless',
-  },
-  spec+: {
-    clusterIP: 'None',
   },
 };
 
@@ -267,9 +258,6 @@ local statefulset = kube.StatefulSet(app_name) {
     secret,
     if params.splunk.ca != '' then secret_splunk,
   ],
-  '21_service': [
-    service,
-    service_headless,
-  ],
+  '21_service': service_headless,
   '22_statefulset': statefulset,
 }
