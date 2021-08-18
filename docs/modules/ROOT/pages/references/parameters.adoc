@@ -76,16 +76,6 @@ The SSL private key as a string.
 
 See xref:how-tos/create-fluentd-cert.adoc[Create Fluentd Cert] to generate the Fluentd certificate.
 
-=== `ssl.passphrase`
-
-[horizontal]
-type:: string
-default:: Vault reference
-
-Passphrase of ssl private key.
-
-See xref:how-tos/create-fluentd-cert.adoc[Create Fluentd Cert] to generate the Fluentd certificate.
-
 
 == `splunk`
 

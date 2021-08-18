@@ -14,7 +14,6 @@ parameters:
         enabled: false
         cert: ""
         key: '?{vaultkv:${cluster:tenant}/${cluster:name}/openshift4-splunk-forwarder/${_instance}/fluentd/privatekey}'
-        passphrase: '?{vaultkv:${cluster:tenant}/${cluster:name}/openshift4-splunk-forwarder/${_instance}/fluentd/privatekey-passphrase}'
 
       resources:
         requests:

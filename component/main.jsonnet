@@ -67,7 +67,6 @@ local configmap = kube.ConfigMap(app_name) {
         <transport tls>
           cert_path /secret/fluentd/tls.crt
           private_key_path /secret/fluentd/tls.key
-          private_key_passphrase "#{ENV['FLUENTD_SSL_PASSPHRASE'] }"
         </transport>
       |||,
     },
@@ -83,7 +82,6 @@ local secret = kube.Secret(app_name) {
   stringData: {
     shared_key: params.fluentd.sharedkey,
     'hec-token': params.splunk.token,
-    'fluentd-ssl-passsphrase': params.fluentd.ssl.passphrase,
     [if params.fluentd.ssl.enabled then 'forwarder-tls.key']: params.fluentd.ssl.key,
     [if params.fluentd.ssl.enabled then 'forwarder-tls.crt']: params.fluentd.ssl.cert,
     [if params.fluentd.ssl.enabled then 'ca-bundle.crt']: params.fluentd.ssl.cert,
@@ -225,7 +223,6 @@ local statefulset = kube.StatefulSet(app_name) {
               { name: 'NODE_NAME', valueFrom: { fieldRef: { apiVersion: 'v1', fieldPath: 'spec.nodeName' } } },
               { name: 'SHARED_KEY', valueFrom: { secretKeyRef: { name: app_name, key: 'shared_key' } } },
               { name: 'SPLUNK_TOKEN', valueFrom: { secretKeyRef: { name: app_name, key: 'hec-token' } } },
-              { name: 'FLUENTD_SSL_PASSPHRASE', valueFrom: { secretKeyRef: { name: app_name, key: 'fluentd-ssl-passsphrase' } } },
               { name: 'LOG_LEVEL', valueFrom: { configMapKeyRef: { name: app_name, key: 'fluentd-loglevel' } } },
               { name: 'SPLUNK_HOST', valueFrom: { configMapKeyRef: { name: app_name, key: 'splunk-hostname' } } },
               { name: 'SPLUNK_SOURCETYPE', valueFrom: { configMapKeyRef: { name: app_name, key: 'splunk-sourcetype' } } },
