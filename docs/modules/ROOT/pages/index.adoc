@@ -14,3 +14,25 @@ To setup the Splunk forwarder you need to:
 ** xref:how-tos/create-fluentd-cert.adoc[SSL certificate and private key] for the splunk-forwarder
 ** xref:how-tos/get-splunk-token.adoc[Splunk Token] for the Splunk server
 * Configure the Splunk server xref:references/parameters.adoc#splunk[hostname and port].
+
+=== Example
+
+[source,yaml]
+----
+applications:
+  - openshift4-splunk-forwarder as splunk-forwarder-customer-a
+
+parameters:
+  splunk_forwarder_customer_a:
+    fluentd:
+      ssl:
+        enabled: true
+        cert: |-
+          -----BEGIN CERTIFICATE-----
+          ...
+          -----END CERTIFICATE-----
+
+    splunk:
+      hostname: splunk.syn-splunk.svc
+      port: 8088
+----

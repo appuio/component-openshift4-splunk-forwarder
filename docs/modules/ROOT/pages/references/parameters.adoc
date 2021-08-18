@@ -209,5 +209,6 @@ parameters:
 
     splunk:
       hostname: prd-3948237.splunk.com
+      port: 8088
       protocol: https
 ----
