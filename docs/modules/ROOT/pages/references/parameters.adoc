@@ -163,7 +163,7 @@ Protocol used to forward logs to Splunk server, either `http` or `https`.
 type:: string
 default:: "openshift"
 
-See https://github.com/fluent/fluent-plugin-splunk/blob/master/README.hec.md.
+See https://docs.splunk.com/Splexicon:Index.
 
 === `sourcetype`
 
@@ -171,7 +171,7 @@ See https://github.com/fluent/fluent-plugin-splunk/blob/master/README.hec.md.
 type:: string
 default:: "openshift"
 
-See https://github.com/fluent/fluent-plugin-splunk/blob/master/README.hec.md.
+See https://docs.splunk.com/Splexicon:Sourcetype.
 
 === `source`
 
@@ -179,7 +179,7 @@ See https://github.com/fluent/fluent-plugin-splunk/blob/master/README.hec.md.
 type:: string
 default:: "openshift"
 
-See https://github.com/fluent/fluent-plugin-splunk/blob/master/README.hec.md.
+See https://docs.splunk.com/Splexicon:Source.
 
 === `ca`
 
