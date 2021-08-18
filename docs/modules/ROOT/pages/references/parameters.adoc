@@ -14,12 +14,12 @@ default::
 fluentd:
     loglevel: info
     replicas: 2
-    sharedkey: splunkforwarding
+    sharedkey: '?{vaultkv:${cluster:tenant}/${cluster:name}/openshift4-splunk-forwarder/${_instance}/fluentd/sharedkey}'
     ssl:
       enabled: false
       cert: ""
-      key: ""
-      passphrase: ""
+      key: '?{vaultkv:${cluster:tenant}/${cluster:name}/openshift4-splunk-forwarder/${_instance}/fluentd/privatekey}'
+      passphrase: '?{vaultkv:${cluster:tenant}/${cluster:name}/openshift4-splunk-forwarder/${_instance}/fluentd/privatekey-passphrase}'
 ----
 
 Fluentd pod parameters.
@@ -62,23 +62,29 @@ Enable fluentd ssl encryption.
 type:: string
 default:: ""
 
-String of ssl certificate.
+The SSL certificate as a string.
+
+See xref:how-tos/create-fluentd-cert.adoc[Create Fluentd Cert] to generate the Fluentd certificate.
 
 === `ssl.key`
 
 [horizontal]
 type:: string
-default:: ""
+default:: Vault reference
 
-String of ssl private key.
+The SSL private key as a string.
+
+See xref:how-tos/create-fluentd-cert.adoc[Create Fluentd Cert] to generate the Fluentd certificate.
 
 === `ssl.passphrase`
 
 [horizontal]
 type:: string
-default:: ""
+default:: Vault reference
 
 Passphrase of ssl private key.
+
+See xref:how-tos/create-fluentd-cert.adoc[Create Fluentd Cert] to generate the Fluentd certificate.
 
 
 == `splunk`
@@ -90,7 +96,7 @@ default::
 [source,yaml]
 ----
 splunk:
-  token: 4a8a737d-5452-426c-a6f7-106dca4e813f
+  token: #VAULT_SECRET
   hostname: splunk.syn-splunk.svc
   port: 8088
   insecure: true
@@ -107,9 +113,28 @@ Parameters for splunk integration.
 
 [horizontal]
 type:: string
-default:: "4a8a737d-5452-426c-a6f7-106dca4e813f"
+default:: Vault reference
 
-Splunk HEC token.
+A Vault reference pointing to the Vault secret containing the Keycloak admin password.
+
+[source,bash]
+----
+# Adjust to your environment
+instance=#INSTANCE_NAME
+token=#TOKEN_FROM_SPLUNK
+key="clusters/kv/${TENANT_ID}/${CLUSTER_ID}/openshift4-splunk-forwarder/${instance}/splunk"
+
+# Query for existing secrets first
+vault kv get "${key}"
+
+# If there are existing secrets, add your instance secrets:
+vault kv patch "${key}" token=${token}
+
+# If there is no pre-existing secret, create new:
+vault kv put "${key}" token=${token}
+----
+
+See xref:how-tos/get-splunk-token.adoc[Get Splunk Token] to aquire the HEC token.
 
 === `hostname`
 

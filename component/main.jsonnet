@@ -80,13 +80,13 @@ local secret = kube.Secret(app_name) {
       'app.kubernetes.io/component': 'fluentd',
     },
   },
-  data: {
-    shared_key: std.base64(params.fluentd.sharedkey),
-    'hec-token': std.base64(params.splunk.token),
-    'fluentd-ssl-passsphrase': std.base64(params.fluentd.ssl.passphrase),
-    [if params.fluentd.ssl.enabled then 'forwarder-tls.crt']: std.base64(params.fluentd.ssl.cert),
-    [if params.fluentd.ssl.enabled then 'forwarder-tls.key']: std.base64(params.fluentd.ssl.key),
-    [if params.fluentd.ssl.enabled then 'ca-bundle.crt']: std.base64(params.fluentd.ssl.cert),
+  stringData: {
+    shared_key: params.fluentd.sharedkey,
+    'hec-token': params.splunk.token,
+    'fluentd-ssl-passsphrase': params.fluentd.ssl.passphrase,
+    [if params.fluentd.ssl.enabled then 'forwarder-tls.key']: params.fluentd.ssl.key,
+    [if params.fluentd.ssl.enabled then 'forwarder-tls.crt']: params.fluentd.ssl.cert,
+    [if params.fluentd.ssl.enabled then 'ca-bundle.crt']: params.fluentd.ssl.cert,
   },
 };
 

@@ -8,13 +8,13 @@ parameters:
       loglevel: info
       replicas: 2
 
-      sharedkey: splunkforwarding
+      sharedkey: '?{vaultkv:${cluster:tenant}/${cluster:name}/openshift4-splunk-forwarder/${_instance}/fluentd/sharedkey}'
 
       ssl:
         enabled: false
         cert: ""
-        key: ""
-        passphrase: ""
+        key: '?{vaultkv:${cluster:tenant}/${cluster:name}/openshift4-splunk-forwarder/${_instance}/fluentd/privatekey}'
+        passphrase: '?{vaultkv:${cluster:tenant}/${cluster:name}/openshift4-splunk-forwarder/${_instance}/fluentd/privatekey-passphrase}'
 
       resources:
         requests:
@@ -30,8 +30,8 @@ parameters:
       tolerations: []
 
     splunk:
-      token: 4a8a737d-5452-426c-a6f7-106dca4e813f # default token
-      hostname: splunk.syn-splunk.svc  # default hostname
+      token: '?{vaultkv:${cluster:tenant}/${cluster:name}/openshift4-splunk-forwarder/${_instance}/splunk/token}'
+      hostname: splunk.syn-splunk.svc
       port: 8088
       insecure: true
       protocol: https
