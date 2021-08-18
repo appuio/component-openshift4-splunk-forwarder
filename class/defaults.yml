@@ -32,7 +32,7 @@ parameters:
       token: '?{vaultkv:${cluster:tenant}/${cluster:name}/openshift4-splunk-forwarder/${_instance}/splunk/token}'
       hostname: splunk.syn-splunk.svc
       port: 8088
-      insecure: true
+      insecure: false
       protocol: https
       index: openshift
       sourcetype: openshift
