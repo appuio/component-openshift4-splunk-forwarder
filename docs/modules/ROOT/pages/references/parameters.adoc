@@ -44,9 +44,25 @@ Number of replicas of the splunk-forwarder pod.
 
 [horizontal]
 type:: string
-default:: "splunkforwarding"
+default:: Vault reference
 
-The shared key for authentication (see https://docs.fluentd.org/input/forward).
+A Vault reference pointing to the Vault secret containing the shared key for authentication (see https://docs.fluentd.org/input/forward).
+
+[source,bash]
+----
+# Adjust to your environment
+instance=#INSTANCE_NAME
+key="clusters/kv/${TENANT_ID}/${CLUSTER_ID}/openshift4-splunk-forwarder/${instance}/fluentd"
+
+# Query for existing secrets first
+vault kv get "${key}"
+
+# If there are existing secrets, add your instance secrets:
+vault kv patch "${key}" sharedkey=$(pwgen -s 32 1)
+
+# If there is no pre-existing secret, create new:
+vault kv put "${key}" sharedkey=$(pwgen -s 32 1)
+----
 
 === `ssl.enabled`
 
@@ -105,26 +121,9 @@ Parameters for splunk integration.
 type:: string
 default:: Vault reference
 
-A Vault reference pointing to the Vault secret containing the Keycloak admin password.
+A Vault reference pointing to the Vault secret containing the Splunk HEC token.
 
-[source,bash]
-----
-# Adjust to your environment
-instance=#INSTANCE_NAME
-token=#TOKEN_FROM_SPLUNK
-key="clusters/kv/${TENANT_ID}/${CLUSTER_ID}/openshift4-splunk-forwarder/${instance}/splunk"
-
-# Query for existing secrets first
-vault kv get "${key}"
-
-# If there are existing secrets, add your instance secrets:
-vault kv patch "${key}" token=${token}
-
-# If there is no pre-existing secret, create new:
-vault kv put "${key}" token=${token}
-----
-
-See xref:how-tos/get-splunk-token.adoc[Get Splunk Token] to aquire the HEC token.
+See xref:how-tos/get-splunk-token.adoc[Get Splunk Token] to acquire the HEC token.
 
 === `hostname`
 
@@ -207,13 +206,8 @@ parameters:
           -----BEGIN CERTIFICATE-----
           ...
           -----END CERTIFICATE-----
-        key: |-
-          -----BEGIN PRIVATE KEY-----
-          ...
-          -----END PRIVATE KEY-----
 
     splunk:
-      token: 4a8a737d-5452-426c-a6f7-106dca4e813f
       hostname: prd-3948237.splunk.com
       protocol: https
 ----

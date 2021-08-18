@@ -6,12 +6,13 @@ See the xref:references/parameters.adoc[parameters] reference for further detail
 
 == Setup
 
-Create selfsigned certificate
+To setup the Splunk forwarder you need to:
+
+* Enable the component for the cluster
+** If you plan to forward to multiple Splunk servers (multi-tenant) instantiate the component.
+* Create the following secrets in Vault:
+** xref:how-tos/create-fluentd-cert.adoc[SSL certificate and private key] for the splunk-forwarder
+** xref:how-tos/get-splunk-token.adoc[Splunk Token] for the Splunk server
+* Configure the Splunk server xref:references/parameters.adoc#splunk[hostname and port].
 
 
-[source,shell]
-----
-openssl req  -nodes -new -x509 -days 3650 -keyout server.key -out server.cert
-----
-
-Use `{INTANCE_NAME}.openshift-logging.svc` as common name

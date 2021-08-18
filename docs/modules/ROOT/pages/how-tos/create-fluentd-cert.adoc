@@ -1,0 +1,59 @@
+= Create Fluentd Certificate
+
+To create an ssl certificate for the splunk-forwarder use this command and answer the questions like in the example below.
+
+[source,shell]
+----
+openssl req  -nodes -new -x509 -days 3650 -keyout server.key -out server.cert
+
+Country Name (2 letter code) [AU]:.
+State or Province Name (full name) [Some-State]:.
+Locality Name (eg, city) []:.
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:.
+Organizational Unit Name (eg, section) []:.
+Common Name (e.g. server FQDN or YOUR name) []:splunk-forwarder-customer-a.openshift-logging.svc
+Email Address []:.
+----
+
+Use `{INSTANCE_NAME}.openshift-logging.svc` as common name.
+
+
+== Upload Private Key to Vault
+
+Create or update the secret in Vault.
+
+[source,shell]
+----
+# Adjust to your environment
+instance=#INSTANCE_NAME
+key="clusters/kv/${TENANT_ID}/${CLUSTER_ID}/openshift4-splunk-forwarder/${instance}/fluentd"
+
+# Query for existing secrets first
+vault kv get "${key}"
+
+# If there are existing secrets, add your instance secrets:
+vault kv patch "${key}" privatekey=$(cat server.key)
+
+# If there is no pre-existing secret, create new:
+vault kv put "${key}" privatekey=$(cat server.key)
+----
+
+
+== Add SSL Certificate to Component Parameters
+
+Add the content of the `server.crt` file to the component parameters.
+
+[source,yaml]
+----
+applications:
+  - openshift4-splunk-forwarder as splunk-forwarder-customer-a
+
+parameters:
+  splunk_forwarder_customer_a:
+    fluentd:
+      ssl:
+        cert: |-
+          -----BEGIN CERTIFICATE-----
+          ...
+          -----END CERTIFICATE-----
+----
