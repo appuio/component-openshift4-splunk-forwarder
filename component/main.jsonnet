@@ -64,6 +64,7 @@ local configmap = kube.ConfigMap(app_name) {
         <transport tls>
           cert_path /secret/fluentd/tls.crt
           private_key_path /secret/fluentd/tls.key
+          private_key_passphrase ""
         </transport>
       |||,
     },
