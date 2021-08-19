@@ -72,7 +72,7 @@ local configmap = kube.ConfigMap(app_name) {
 };
 
 local secret = kube.Secret(app_name) {
-  data_:: {
+  stringData: {
     shared_key: params.fluentd.sharedkey,
     'hec-token': params.splunk.token,
     [if params.fluentd.ssl.enabled then 'forwarder-tls.key']: params.fluentd.ssl.key,
