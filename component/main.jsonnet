@@ -6,9 +6,6 @@ local inv = kap.inventory();
 // The hiera parameters for the component
 local params = inv.parameters.openshift4_splunk_forwarder;
 local app_name = inv.parameters._instance;
-local app_selector = {
-  name: app_name,
-};
 
 local serviceaccount = kube.ServiceAccount(app_name);
 
@@ -74,12 +71,7 @@ local configmap = kube.ConfigMap(app_name) {
 };
 
 local secret = kube.Secret(app_name) {
-  metadata+: {
-    labels+: {
-      'app.kubernetes.io/component': 'fluentd',
-    },
-  },
-  stringData: {
+  data_:: {
     shared_key: params.fluentd.sharedkey,
     'hec-token': params.splunk.token,
     [if params.fluentd.ssl.enabled then 'forwarder-tls.key']: params.fluentd.ssl.key,
@@ -89,44 +81,12 @@ local secret = kube.Secret(app_name) {
 };
 
 local secret_splunk = kube.Secret(app_name + '-splunk') {
-  metadata+: {
-    labels+: {
-      'app.kubernetes.io/component': 'fluentd',
-    },
-  },
-  data: {
-    'splunk-ca.crt': std.base64(params.splunk.ca),
-  },
-};
-
-local service_headless = kube.Service(app_name) {
-  metadata+: {
-    labels+: {
-      'app.kubernetes.io/component': 'fluentd',
-      name: app_name + '-headless',
-    },
-    name: app_name + '-headless',
-  },
-  spec: {
-    clusterIP: 'None',
-    ports: [ {
-      name: '24224-tcp',
-      protocol: 'TCP',
-      port: 24224,
-      targetPort: 24224,
-    } ],
-    selector: app_selector,
-    type: 'ClusterIP',
-    sessionAffinity: 'None',
+  data_:: {
+    'splunk-ca.crt': params.splunk.ca,
   },
 };
 
 local statefulset = kube.StatefulSet(app_name) {
-  metadata+: {
-    labels+: {
-      'app.kubernetes.io/component': 'fluentd',
-    },
-  },
   spec+: {
     replicas: params.fluentd.replicas,
     template+: {
@@ -203,6 +163,14 @@ local statefulset = kube.StatefulSet(app_name) {
   },
 };
 
+local service = kube.Service(app_name) {
+  target_pod:: statefulset.spec.template,
+  target_container_name:: app_name,
+  spec+: {
+    sessionAffinity: 'None',
+  },
+};
+
 
 // Define outputs below
 {
@@ -212,6 +180,6 @@ local statefulset = kube.StatefulSet(app_name) {
     secret,
     if params.splunk.ca != '' then secret_splunk,
   ],
-  '21_service': service_headless,
-  '22_statefulset': statefulset,
+  '21_statefulset': statefulset,
+  '22_service': service,
 }
