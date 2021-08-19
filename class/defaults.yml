@@ -6,7 +6,7 @@ parameters:
 
     fluentd:
       loglevel: info
-      replicas: 2
+      replicas: 1
 
       sharedkey: '?{vaultkv:${cluster:tenant}/${cluster:name}/openshift4-splunk-forwarder/${_instance}/fluentd/sharedkey}'
 

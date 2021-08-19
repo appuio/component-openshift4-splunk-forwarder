@@ -36,7 +36,7 @@ Log level of the splunk-forwarder pod (https://docs.fluentd.org/deployment/loggi
 
 [horizontal]
 type:: integer
-default:: 2
+default:: 1
 
 Number of replicas of the splunk-forwarder pod.
 
