@@ -2,18 +2,214 @@
 
 The parent key for all of the following parameters is `openshift4_splunk_forwarder`.
 
-== `namespace`
+
+== `fluentd`
+
+[horizontal]
+type:: dictionary
+default::
++
+[source,yaml]
+----
+fluentd:
+    loglevel: info
+    replicas: 2
+    sharedkey: '?{vaultkv:${cluster:tenant}/${cluster:name}/openshift4-splunk-forwarder/${_instance}/fluentd/sharedkey}'
+    ssl:
+      enabled: false
+      cert: ""
+      key: '?{vaultkv:${cluster:tenant}/${cluster:name}/openshift4-splunk-forwarder/${_instance}/fluentd/privatekey}'
+      passphrase: '?{vaultkv:${cluster:tenant}/${cluster:name}/openshift4-splunk-forwarder/${_instance}/fluentd/privatekey-passphrase}'
+----
+
+Fluentd pod parameters.
+
+=== `loglevel`
 
 [horizontal]
 type:: string
-default:: `syn-openshift4-splunk-forwarder`
+default:: "info"
 
-The namespace in which to deploy this component.
+Log level of the splunk-forwarder pod (https://docs.fluentd.org/deployment/logging).
+
+=== `replicas`
+
+[horizontal]
+type:: integer
+default:: 1
+
+Number of replicas of the splunk-forwarder pod.
+
+=== `sharedkey`
+
+[horizontal]
+type:: string
+default:: Vault reference
+
+A Vault reference pointing to the Vault secret containing the shared key for authentication (see https://docs.fluentd.org/input/forward).
+
+[source,bash]
+----
+# Adjust to your environment
+instance=#INSTANCE_NAME
+key="clusters/kv/${TENANT_ID}/${CLUSTER_ID}/openshift4-splunk-forwarder/${instance}/fluentd"
+
+# Query for existing secrets first
+vault kv get "${key}"
+
+# If there are existing secrets, add your instance secrets:
+vault kv patch "${key}" sharedkey=$(pwgen -s 32 1)
+
+# If there is no pre-existing secret, create new:
+vault kv put "${key}" sharedkey=$(pwgen -s 32 1)
+----
+
+=== `ssl.enabled`
+
+[horizontal]
+type:: boolean
+default:: false
+
+Enable fluentd SSL encryption.
+
+=== `ssl.cert`
+
+[horizontal]
+type:: string
+default:: ""
+
+The SSL certificate as a string.
+
+See xref:how-tos/create-fluentd-cert.adoc[Create Fluentd Cert] to generate the Fluentd certificate.
+
+=== `ssl.key`
+
+[horizontal]
+type:: string
+default:: Vault reference
+
+A Vault reference to the SSL private key.
+
+See xref:how-tos/create-fluentd-cert.adoc[Create Fluentd Cert] to generate the Fluentd certificate.
+
+
+== `splunk`
+
+[horizontal]
+type:: dictionary
+default::
++
+[source,yaml]
+----
+splunk:
+  token: #VAULT_SECRET
+  hostname: splunk.syn-splunk.svc
+  port: 8088
+  insecure: true
+  protocol: https
+  index: openshift
+  sourcetype: openshift
+  source: openshift
+  ca: ""
+----
+
+Parameters for Splunk integration.
+
+=== `token`
+
+[horizontal]
+type:: string
+default:: Vault reference
+
+A Vault reference pointing to the Vault secret containing the Splunk HEC token.
+
+See xref:how-tos/get-splunk-token.adoc[Get Splunk Token] to acquire the HEC token.
+
+=== `hostname`
+
+[horizontal]
+type:: string
+default:: "splunk.syn-splunk.svc"
+
+Hostname of Splunk server.
+
+=== `port`
+
+[horizontal]
+type:: integer
+default:: 8088
+
+Port of Splunk server.
+
+=== `insecure`
+
+[horizontal]
+type:: boolean
+default:: true
+
+If this value is set to `true` the certificates of Splunk server aren't validated.
+
+=== `protocol`
+
+[horizontal]
+type:: string
+default:: "https"
+
+Protocol used to forward logs to Splunk server, either `http` or `https`.
+
+=== `index`
+
+[horizontal]
+type:: string
+default:: "openshift"
+
+See https://docs.splunk.com/Splexicon:Index.
+
+=== `sourcetype`
+
+[horizontal]
+type:: string
+default:: "openshift"
+
+See https://docs.splunk.com/Splexicon:Sourcetype.
+
+=== `source`
+
+[horizontal]
+type:: string
+default:: "openshift"
+
+See https://docs.splunk.com/Splexicon:Source.
+
+=== `ca`
+
+[horizontal]
+type:: string
+default:: ""
+
+The CA certificate for the Splunk server.
+Only required if the Splunk server is secured with a certificate which is signed by a CA that's not trusted by default.
 
 
 == Example
 
 [source,yaml]
 ----
-namespace: example-namespace
+applications:
+  - openshift4-splunk-forwarder as splunk-forwarder-customer-a
+
+parameters:
+  splunk_forwarder_customer_a:
+    fluentd:
+      ssl:
+        enabled: true
+        cert: |-
+          -----BEGIN CERTIFICATE-----
+          ...
+          -----END CERTIFICATE-----
+
+    splunk:
+      hostname: prd-3948237.splunk.com
+      port: 8088
+      protocol: https
 ----

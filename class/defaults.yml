@@ -1,4 +1,40 @@
 parameters:
   openshift4_splunk_forwarder:
     =_metadata: {}
-    namespace: syn-openshift4-splunk-forwarder
+    multi_instance: true
+    namespace: openshift-logging
+
+    fluentd:
+      loglevel: info
+      replicas: 1
+
+      sharedkey: '?{vaultkv:${cluster:tenant}/${cluster:name}/openshift4-splunk-forwarder/${_instance}/fluentd/sharedkey}'
+
+      ssl:
+        enabled: false
+        cert: ""
+        key: '?{vaultkv:${cluster:tenant}/${cluster:name}/openshift4-splunk-forwarder/${_instance}/fluentd/privatekey}'
+
+      resources:
+        requests:
+          cpu: 100m
+          memory: 512Mi
+        limits:
+          cpu: 500m
+          memory: 1024Mi
+
+      # less used parameters
+      nodeselector: {}
+      affinity: {}
+      tolerations: []
+
+    splunk:
+      token: '?{vaultkv:${cluster:tenant}/${cluster:name}/openshift4-splunk-forwarder/${_instance}/splunk/token}'
+      hostname: splunk.syn-splunk.svc
+      port: 8088
+      insecure: false
+      protocol: https
+      index: openshift
+      sourcetype: openshift
+      source: openshift
+      ca: ""
