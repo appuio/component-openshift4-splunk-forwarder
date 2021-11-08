@@ -19,6 +19,7 @@ local configmap = kube.ConfigMap(app_name) {
     'splunk-index': params.splunk.index,
     'splunk-sourcetype': params.splunk.sourcetype,
     'splunk-source': params.splunk.source,
+    'splunk-ssl-verify': std.toString(!params.splunk.insecure),
     'td-agent.conf': |||
       <system>
         log_level "#{ENV['LOG_LEVEL'] }"
@@ -119,6 +120,7 @@ local statefulset = kube.StatefulSet(app_name) {
               SPLUNK_PROTOCOL: { configMapKeyRef: { name: app_name, key: 'splunk-protocol' } },
               SPLUNK_INSECURE: { configMapKeyRef: { name: app_name, key: 'splunk-insecure' } },
               SPLUNK_INDEX: { configMapKeyRef: { name: app_name, key: 'splunk-index' } },
+              SPLUNK_SSL_VERIFY: { configMapKeyRef: { name: app_name, key: 'splunk-ssl-verify' } },
             },
             args: [ 'fluentd' ],
             livenessProbe: {
