@@ -46,7 +46,7 @@ local configmap = kube.ConfigMap(app_name) {
         hec_token "#{ENV['SPLUNK_TOKEN'] }"
         host "#{ENV['NODE_NAME']}"
         ssl_verify "#{ENV['SPLUNK_SSL_VERIFY']}"
-        ca_file /secrets/splunk/splunk-ca.crt
+        ca_file /secret/splunk/splunk-ca.crt
         # TODO: configurize buffer config
         <buffer>
               @type memory
