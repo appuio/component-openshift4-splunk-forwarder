@@ -147,7 +147,7 @@ local statefulset = kube.StatefulSet(app_name) {
               [if params.fluentd.ssl.enabled then 'fluentd-certs']:
                 { readOnly: true, mountPath: '/secret/fluentd' },
               [if params.splunk.ca != '' then 'splunk-certs']:
-                { readOnly: true, mountPath: '/secret/fluentd' },
+                { readOnly: true, mountPath: '/secret/splunk' },
             },
           },
         },
