@@ -1,0 +1,147 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations: {}
+  labels:
+    name: openshift4-splunk-forwarder
+  name: openshift4-splunk-forwarder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: openshift4-splunk-forwarder
+  serviceName: openshift4-splunk-forwarder
+  template:
+    metadata:
+      annotations: {}
+      labels:
+        name: openshift4-splunk-forwarder
+    spec:
+      affinity: {}
+      containers:
+        - args:
+            - fluentd
+          env:
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  key: fluentd-loglevel
+                  name: openshift4-splunk-forwarder
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+            - name: SHARED_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: shared_key
+                  name: openshift4-splunk-forwarder
+            - name: SPLUNK_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: splunk-hostname
+                  name: openshift4-splunk-forwarder
+            - name: SPLUNK_INDEX
+              valueFrom:
+                configMapKeyRef:
+                  key: splunk-index
+                  name: openshift4-splunk-forwarder
+            - name: SPLUNK_INSECURE
+              valueFrom:
+                configMapKeyRef:
+                  key: splunk-insecure
+                  name: openshift4-splunk-forwarder
+            - name: SPLUNK_PORT
+              valueFrom:
+                configMapKeyRef:
+                  key: splunk-port
+                  name: openshift4-splunk-forwarder
+            - name: SPLUNK_PROTOCOL
+              valueFrom:
+                configMapKeyRef:
+                  key: splunk-protocol
+                  name: openshift4-splunk-forwarder
+            - name: SPLUNK_SOURCE
+              valueFrom:
+                configMapKeyRef:
+                  key: splunk-source
+                  name: openshift4-splunk-forwarder
+            - name: SPLUNK_SOURCETYPE
+              valueFrom:
+                configMapKeyRef:
+                  key: splunk-sourcetype
+                  name: openshift4-splunk-forwarder
+            - name: SPLUNK_SSL_VERIFY
+              valueFrom:
+                configMapKeyRef:
+                  key: splunk-ssl-verify
+                  name: openshift4-splunk-forwarder
+            - name: SPLUNK_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: hec-token
+                  name: openshift4-splunk-forwarder
+          image: registry.redhat.io/openshift4/ose-logging-fluentd:v4.6
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            tcpSocket:
+              port: 24224
+            timeoutSeconds: 3
+          name: openshift4-splunk-forwarder
+          ports:
+            - containerPort: 24224
+              name: forwarder-tcp
+              protocol: TCP
+            - containerPort: 24224
+              name: forwarder-udp
+              protocol: UDP
+          readinessProbe:
+            initialDelaySeconds: 2
+            periodSeconds: 3
+            tcpSocket:
+              port: 24224
+            timeoutSeconds: 2
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1024Mi
+            requests:
+              cpu: 100m
+              memory: 512Mi
+          stdin: false
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          tty: false
+          volumeMounts:
+            - mountPath: /var/log/fluentd
+              name: buffer
+            - mountPath: /etc/fluent/
+              name: fluentd-config
+              readOnly: true
+      dnsPolicy: ClusterFirst
+      imagePullSecrets: []
+      initContainers: []
+      nodeSelector: {}
+      restartPolicy: Always
+      serviceAccount: openshift4-splunk-forwarder
+      terminationGracePeriodSeconds: 30
+      tolerations: []
+      volumes:
+        - emptyDir: {}
+          name: buffer
+        - configMap:
+            defaultMode: 420
+            items:
+              - key: td-agent.conf
+                path: fluent.conf
+            name: openshift4-splunk-forwarder
+            optional: true
+          name: fluentd-config
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+    type: RollingUpdate
+  volumeClaimTemplates: []
