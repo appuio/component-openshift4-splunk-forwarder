@@ -1,0 +1,57 @@
+apiVersion: v1
+data:
+  fluentd-loglevel: info
+  splunk-hostname: splunk.syn-splunk.svc
+  splunk-index: openshift
+  splunk-insecure: 'false'
+  splunk-port: '8088'
+  splunk-protocol: https
+  splunk-source: openshift
+  splunk-sourcetype: openshift
+  splunk-ssl-verify: 'true'
+  td-agent.conf: |
+    <system>
+      log_level "#{ENV['LOG_LEVEL'] }"
+    </system>
+    <source>
+      @type  forward
+      @id    input1
+      port  24224
+      null
+      <security>
+        shared_key "#{ENV['SHARED_KEY'] }"
+        self_hostname "#{ENV['HOSTNAME']}"
+      </security>
+    </source>
+    <match **>
+      @type splunk_hec
+      protocol "#{ENV['SPLUNK_PROTOCOL'] }"
+      insecure_ssl "#{ENV['SPLUNK_INSECURE'] }"
+      hec_host "#{ENV['SPLUNK_HOST'] }"
+      sourcetype "#{ENV['SPLUNK_SOURCETYPE'] }"
+      source "#{ENV['SPLUNK_SOURCE'] }"
+      index "#{ENV['SPLUNK_INDEX'] }"
+      hec_port "#{ENV['SPLUNK_PORT'] }"
+      hec_token "#{ENV['SPLUNK_TOKEN'] }"
+      host "#{ENV['NODE_NAME']}"
+      ssl_verify "#{ENV['SPLUNK_SSL_VERIFY']}"
+      ca_file /secret/splunk/splunk-ca.crt
+      # TODO: configurize buffer config
+      <buffer>
+            @type memory
+            chunk_limit_records 100000
+            chunk_limit_size 200m
+            flush_interval 5s
+            flush_thread_count 1
+            overflow_action block
+            retry_max_times 3
+            total_limit_size 600m
+      </buffer>
+      # END: configurize buffer config
+    </match>
+kind: ConfigMap
+metadata:
+  annotations: {}
+  labels:
+    name: openshift4-splunk-forwarder
+  name: openshift4-splunk-forwarder
