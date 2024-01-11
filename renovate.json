@@ -1,8 +1,22 @@
 {
   "extends": [
-    "config:base"
+    "config:base",
+    ":gitSignOff",
+    ":disableDependencyDashboard"
   ],
+  "ignorePaths": [
+    ".github/**"
+  ],
+  "postUpgradeTasks": {
+    "commands": [
+      "make gen-golden-all"
+    ],
+    "fileFilters": [ "tests/golden/**" ],
+    "executionMode": "update"
+  },
+  "suppressNotifications": [ "artifactErrors" ],
   "labels": [
     "dependency"
-  ]
+  ],
+  "separateMinorPatch": true
 }
