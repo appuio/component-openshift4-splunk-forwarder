@@ -5,6 +5,10 @@ local argocd = import 'lib/argocd.libjsonnet';
 
 local app = argocd.App('openshift4-splunk-forwarder', params.namespace);
 
+local appPath =
+  local project = std.get(app, 'spec', { project: 'syn' }).project;
+  if project == 'syn' then 'apps' else 'apps-%s' % project;
+
 {
-  'openshift4-splunk-forwarder': app,
+  ['%s/openshift4-splunk-forwarder' % appPath]: app,
 }

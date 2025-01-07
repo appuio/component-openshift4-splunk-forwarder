@@ -2,6 +2,7 @@ parameters:
   openshift4_splunk_forwarder:
     =_metadata:
       multi_instance: true
+      multi_tenant: true
     namespace: openshift-logging
 
     fluentd:
