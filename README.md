@@ -1,3 +1,11 @@
+# :warning: Repo Archive Notice
+
+As of October 29, 2025, this component is deprecated and will no longer be updated.
+OpenShift 4 supports forwarding logs directly to Splunk.
+See [OpenShift Logging Documentation](https://docs.redhat.com/en/documentation/red_hat_openshift_logging/6.3/html/configuring_logging/configuring-log-forwarding#logging-forward-splunk_configuring-log-forwarding)
+
+See https://hub.syn.tools/cert-manager/references/parameters.html#_component_exoscale_webhook.
+
 # Commodore Component: openshift4-splunk-forwarder
 
 This is a [Commodore][commodore] Component for openshift4-splunk-forwarder.
