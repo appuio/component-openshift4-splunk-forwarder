@@ -3,6 +3,10 @@ parameters:
     =_metadata:
       multi_instance: true
       multi_tenant: true
+      deprecated: true
+      deprecation_notice: >-
+        OpenShift 4 supports forwarding logs directly to Splunk.
+        See https://docs.redhat.com/en/documentation/red_hat_openshift_logging/6.3/html/configuring_logging/configuring-log-forwarding#logging-forward-splunk_configuring-log-forwarding
     namespace: openshift-logging
 
     fluentd:
